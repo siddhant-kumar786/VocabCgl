@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vocabulary Builder</title>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --dark-color: #2c3e50;
+            --light-color: #ecf0f1;
+            --text-color: #333;
+            --muted-color: #95a5a6;
+            --warning-color: #e74c3c;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--dark-color);
+            margin: 0;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        button.secondary {
+            background-color: var(--muted-color);
+        }
+        
+        button.secondary:hover {
+            background-color: #7f8c8d;
+        }
+        
+        button.warning {
+            background-color: var(--warning-color);
+        }
+        
+        button.warning:hover {
+            background-color: #c0392b;
+        }
+        
+        .card {
+            background-color: var(--light-color);
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 20px;
+            text-align: center;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .category {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .word {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 15px 0;
+            color: var(--dark-color);
+            transition: all 0.3s;
+        }
+        
+        .meaning {
+            font-size: 1.3rem;
+            color: var(--text-color);
+            margin: 15px 0;
+            min-height: 60px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s;
+        }
+        
+        .meaning.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .progress-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 6px;
+            background-color: var(--primary-color);
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+        
+        .timer-display {
+            text-align: center;
+            font-size: 1rem;
+            color: var(--muted-color);
+            margin-bottom: 10px;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: var(--muted-color);
+        }
+        
+        .settings {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+        }
+        
+        .settings-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .setting-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+        }
+        
+        .speed-value {
+            text-align: center;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        
+        .shortcuts {
+            margin-top: 30px;
+            font-size: 0.85rem;
+            color: var(--muted-color);
+        }
+        
+        .shortcut {
+            display: inline-block;
+            background-color: #e0e0e0;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin: 0 3px;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .word {
+                font-size: 2rem;
+            }
+            
+            .meaning {
+                font-size: 1.1rem;
+            }
+            
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">Vocabulary Builder</h1>
+            <div class="controls">
+                <button id="prevBtn" title="Previous word">
+                    <span>← Previous</span>
+                </button>
+                <button id="playPauseBtn" class="secondary">
+                    <span>⏸ Pause</span>
+                </button>
+                <button id="nextBtn" title="Next word">
+                    <span>Next →</span>
+                </button>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="category" id="category">Category</div>
+            <div class="word" id="word">Ready?</div>
+            <div class="meaning" id="meaning">Meaning will appear here</div>
+            
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            
+            <div class="timer-display" id="timerDisplay">Next word in: 5.0s</div>
+        </div>
+        
+        <div class="stats">
+            <div id="wordsStats">Words: 0/0</div>
+            <div id="sessionStats">Session: 0 words</div>
+        </div>
+        
+        <div class="settings">
+            <div class="settings-title">
+                <span>Settings</span>
+            </div>
+            
+            <div class="setting-group">
+                <label for="wordDuration">Word Display Duration (seconds)</label>
+                <input type="range" id="wordDuration" min="1" max="10" step="0.5" value="5">
+                <div class="speed-value" id="wordDurationValue">5.0</div>
+            </div>
+            
+            <div class="setting-group">
+                <label for="meaningDuration">Meaning Display Duration (seconds)</label>
+                <input type="range" id="meaningDuration" min="1" max="10" step="0.5" value="2">
+                <div class="speed-value" id="meaningDurationValue">2.0</div>
+            </div>
+        </div>
+        
+        <div class="shortcuts">
+            <strong>Keyboard Shortcuts:</strong> 
+            <span><span class="shortcut">Space</span> Pause/Resume</span> • 
+            <span><span class="shortcut">←</span> Previous word</span> • 
+            <span><span class="shortcut">→</span> Next word</span>
+        </div>
+    </div>
+
+    <script>
+        // Complete vocabulary database with all words and meanings
+        const vocabulary = [
+            {
+                category: "Praise",
+                words: [
+                    { word: "Plaudit", meaning: "An expression of praise or approval" },
+                    { word: "Compliment", meaning: "A polite expression of praise or admiration" },
+                    { word: "Praise", meaning: "Expression of warm approval or admiration" },
+                    { word: "Applause", meaning: "Approval or praise expressed by clapping" },
+                    { word: "Acclamation", meaning: "Loud and enthusiastic approval" },
+                    { word: "Ovation", meaning: "Sustained enthusiastic applause" },
+                    { word: "Commendation", meaning: "Formal praise or approval" },
+                    { word: "Kudos", meaning: "Praise and honor received for an achievement" },
+                    { word: "Approbation", meaning: "Official approval or praise" },
+                    { word: "Citation", meaning: "Official commendation or recognition" },
+                    { word: "Encomium", meaning: "A speech or piece of writing that praises someone highly" },
+                    { word: "Eulogy", meaning: "A speech or writing in praise of a person, especially one who has recently died" },
+                    { word: "Extolment", meaning: "The act of praising enthusiastically" },
+                    { word: "Accolade", meaning: "An award or privilege granted as a special honor" },
+                    { word: "Laurels", meaning: "Honor or recognition for achievement" }
+                ]
+            },
+            {
+                category: "Criticism",
+                words: [
+                    { word: "Pejorative", meaning: "Expressing contempt or disapproval" },
+                    { word: "Ignominy", meaning: "Public shame or disgrace" },
+                    { word: "Criticism", meaning: "The expression of disapproval of someone or something" },
+                    { word: "Condemnation", meaning: "The expression of very strong disapproval" },
+                    { word: "Censure", meaning: "Strong criticism or disapproval" },
+                    { word: "Flak", meaning: "Strong criticism or opposition" },
+                    { word: "Harangue", meaning: "A lengthy and aggressive speech of criticism" },
+                    { word: "Diatribe", meaning: "A forceful and bitter verbal attack" },
+                    { word: "Tirade", meaning: "A long, angry speech of criticism" },
+                    { word: "Jeremiad", meaning: "A prolonged lamentation or complaint" },
+                    { word: "Calumny", meaning: "A false and malicious statement designed to injure someone's reputation" },
+                    { word: "Opprobrium", meaning: "Harsh criticism or censure" },
+                    { word: "Mortification", meaning: "Great embarrassment or shame" },
+                    { word: "Obloquy", meaning: "Strong public criticism or verbal abuse" },
+                    { word: "Rant", meaning: "A lengthy, angry speech of criticism" },
+                    { word: "Pillory", meaning: "To subject to public criticism or ridicule" },
+                    { word: "Invective", meaning: "Insulting, abusive, or highly critical language" }
+                ]
+            },
+            {
+                category: "Virtuous",
+                words: [
+                    { word: "Puritanical", meaning: "Having or displaying strict moral standards" },
+                    { word: "Honest", meaning: "Free of deceit; truthful and sincere" },
+                    { word: "Scrupulous", meaning: "Diligent, thorough, and extremely attentive to details" },
+                    { word: "Ethical", meaning: "Relating to moral principles or the branch of knowledge dealing with these" },
+                    { word: "Conscientious", meaning: "Wishing to do one's work or duty well and thoroughly" },
+                    { word: "Virtuous", meaning: "Having or showing high moral standards" },
+                    { word: "Upright", meaning: "Honest, honorable, and morally correct" },
+                    { word: "Principled", meaning: "Acting in accordance with morality and showing recognition of right and wrong" },
+                    { word: "Priggish", meaning: "Self-righteously moralistic and superior" },
+                    { word: "Aboveboard", meaning: "Legitimate, honest, and open" },
+                    { word: "Straightforward", meaning: "Uncomplicated and easy to do or understand" },
+                    { word: "Forthright", meaning: "Direct and outspoken; straightforward and honest" },
+                    { word: "Righteous", meaning: "Morally right or justifiable" }
+                ]
+            },
+            {
+                category: "Immoral",
+                words: [
+                    { word: "Vicious", meaning: "Deliberately cruel or violent" },
+                    { word: "Unconscionable", meaning: "Not right or reasonable; excessive" },
+                    { word: "Vulgar", meaning: "Lacking sophistication or good taste" },
+                    { word: "Unjust", meaning: "Not based on or behaving according to what is morally right and fair" },
+                    { word: "Corrupt", meaning: "Having or showing a willingness to act dishonestly in return for money or personal gain" },
+                    { word: "Reprobate", meaning: "An unprincipled person" },
+                    { word: "Immoral", meaning: "Not conforming to accepted standards of morality" },
+                    { word: "Dishonest", meaning: "Behaving or prone to behave in an untrustworthy or fraudulent way" }
+                ]
+            },
+            {
+                category: "Increase",
+                words: [
+                    { word: "Augment", meaning: "To make something greater by adding to it; increase" },
+                    { word: "Increase", meaning: "Become or make greater in size, amount, or degree" },
+                    { word: "Accelerate", meaning: "Begin to move more quickly" },
+                    { word: "Amplify", meaning: "Enlarge upon or add detail to (a story or statement)" },
+                    { word: "Propel", meaning: "Drive or push something forward" },
+                    { word: "Aggrandize", meaning: "Increase the power, status, or wealth of" },
+                    { word: "Escalate", meaning: "Increase rapidly" },
+                    { word: "Elevate", meaning: "Raise to a more important or impressive level" },
+                    { word: "Expedite", meaning: "Make (an action or process) happen sooner or be accomplished more quickly" },
+                    { word: "Enhance", meaning: "Intensify, increase, or further improve the quality, value, or extent of" },
+                    { word: "Intensify", meaning: "Become or make more intense" },
+                    { word: "Skyrocket", meaning: "Increase very rapidly" },
+                    { word: "Enlarge", meaning: "Make or become bigger or more extensive" },
+                    { word: "Parlay", meaning: "Turn an initial stake or winnings from a previous bet into (a greater amount) by gambling" },
+                    { word: "Mount", meaning: "Increase in quantity or intensity" },
+                    { word: "Surge", meaning: "Increase suddenly and powerfully" },
+                    { word: "Soar", meaning: "Increase rapidly above the usual level" },
+                    { word: "Crescendo", meaning: "A gradual increase in loudness in a piece of music" },
+                    { word: "Burgeon", meaning: "Begin to grow or increase rapidly; flourish" },
+                    { word: "Mushroom", meaning: "Increase, spread, or develop rapidly" },
+                    { word: "Proliferate", meaning: "Increase rapidly in numbers; multiply" },
+                    { word: "Boost", meaning: "Help or encourage (something) to increase or improve" }
+                ]
+            },
+            {
+                category: "Decrease",
+                words: [
+                    { word: "Decrease", meaning: "Make or become smaller or fewer in size, amount, intensity, or degree" },
+                    { word: "Abbreviate", meaning: "Shorten (a word, phrase, or text)" },
+                    { word: "Abridge", meaning: "Shorten (a book, movie, speech, or other text) without losing the sense" },
+                    { word: "Shorten", meaning: "Make or become shorter" },
+                    { word: "Diminish", meaning: "Make or become less" },
+                    { word: "Dwindle", meaning: "Diminish gradually in size, amount, or strength" },
+                    { word: "Decline", meaning: "Gradually become smaller, fewer, or less; decrease" },
+                    { word: "Wane", meaning: "Decrease in vigor, power, or extent; become weaker" },
+                    { word: "Abate", meaning: "Become less intense or widespread" },
+                    { word: "Truncate", meaning: "Shorten (something) by cutting off the top or the end" },
+                    { word: "Curtail", meaning: "Reduce in extent or quantity; impose a restriction on" },
+                    { word: "Taper", meaning: "Diminish or reduce in thickness toward one end" },
+                    { word: "Depreciate", meaning: "Diminish in value over a period of time" },
+                    { word: "Attenuate", meaning: "Reduce the force, effect, or value of" },
+                    { word: "Recede", meaning: "Go or move back or further away from a previous position" },
+                    { word: "Mitigate", meaning: "Make less severe, serious, or painful" },
+                    { word: "Shrink", meaning: "Become or make smaller in size or amount" },
+                    { word: "Subside", meaning: "Become less intense, violent, or severe" },
+                    { word: "Ebb", meaning: "Gradually lessen or reduce" },
+                    { word: "Tumble", meaning: "Fall suddenly, clumsily, or headlong" }
+                ]
+            },
+            {
+                category: "Knowledgeable",
+                words: [
+                    { word: "Erudite", meaning: "Having or showing great knowledge or learning" },
+                    { word: "Knowledgeable", meaning: "Intelligent and well informed" },
+                    { word: "Literate", meaning: "Able to read and write" },
+                    { word: "Scholarly", meaning: "Involving or relating to serious academic study" },
+                    { word: "Brainly", meaning: "Intelligent and well-informed" },
+                    { word: "Educated", meaning: "Having been educated" },
+                    { word: "Highbrow", meaning: "Intellectual or rarefied in taste" },
+                    { word: "Learned", meaning: "Having acquired much knowledge through study" },
+                    { word: "Bookish", meaning: "Devoted to reading and studying rather than worldly interests" },
+                    { word: "Cerebral", meaning: "Intellectual rather than emotional or physical" },
+                    { word: "Academic", meaning: "Relating to education and scholarship" }
+                ]
+            },
+            {
+                category: "Uneducated",
+                words: [
+                    { word: "Uneducated", meaning: "Having or showing a poor level of education" },
+                    { word: "Ignorant", meaning: "Lacking knowledge or awareness in general" },
+                    { word: "Illiterate", meaning: "Unable to read or write" },
+                    { word: "Unlettered", meaning: "Not well educated or illiterate" },
+                    { word: "Benighted", meaning: "In a state of pitiful or contemptible intellectual or moral ignorance" },
+                    { word: "Unscholarly", meaning: "Not characteristic of or suitable to a scholar" }
+                ]
+            },
+            {
+                category: "Soothe",
+                words: [
+                    { word: "Assuage", meaning: "Make (an unpleasant feeling) less intense" },
+                    { word: "Ease", meaning: "Make (something unpleasant or intense) less serious or severe" },
+                    { word: "Gratify", meaning: "Give (someone) pleasure or satisfaction" },
+                    { word: "Satisfy", meaning: "Meet the expectations, needs, or desires of (someone)" },
+                    { word: "Lull", meaning: "Calm or send to sleep, typically with soothing sounds or movements" },
+                    { word: "Appease", meaning: "Pacify or placate (someone) by acceding to their demands" },
+                    { word: "Relieve", meaning: "Cause (pain, distress, or difficulty) to become less severe or serious" },
+                    { word: "Alleviate", meaning: "Make (suffering, deficiency, or a problem) less severe" },
+                    { word: "Allay", meaning: "Diminish or put at rest (fear, suspicion, or worry)" },
+                    { word: "Placate", meaning: "Make (someone) less angry or hostile" },
+                    { word: "Pacify", meaning: "Quell the anger, agitation, or excitement of" },
+                    { word: "Tranquilize", meaning: "Make (someone) calm or unconscious, typically by administering a drug" },
+                    { word: "Conciliate", meaning: "Stop (someone) from being angry or discontented; placate" },
+                    { word: "Mitigate", meaning: "Make less severe, serious, or painful" },
+                    { word: "Palliate", meaning: "Make (a disease or its symptoms) less severe without removing the cause" },
+                    { word: "Propitiate", meaning: "Win or regain the favor of (a god, spirit, or person) by doing something that pleases them" },
+                    { word: "Mollify", meaning: "Appease the anger or anxiety of (someone)" },
+                    { word: "Soothe", meaning: "Gently calm (a person or their feelings)" },
+                    { word: "Calm Down", meaning: "Become or make someone quiet and peaceful after anger or excitement" },
+                    { word: "Sedate", meaning: "Calm (someone) or make them sleep by administering a sedative drug" }
+                ]
+            },
+            {
+                category: "Aggravate",
+                words: [
+                    { word: "Aggravate", meaning: "Make (a problem, injury, or offense) worse or more serious" },
+                    { word: "Incense", meaning: "Make very angry" },
+                    { word: "Arouse", meaning: "Evoke or awaken (a feeling, emotion, or response)" },
+                    { word: "Stir", meaning: "Arouse or strong feeling in (someone); move or excite" },
+                    { word: "Incite", meaning: "Encourage or stir up (violent or unlawful behavior)" },
+                    { word: "Instigate", meaning: "Bring about or initiate (an action or event)" },
+                    { word: "Enrage", meaning: "Make very angry" },
+                    { word: "Outrage", meaning: "Arouse fierce anger, shock, or indignation in (someone)" },
+                    { word: "Infuriate", meaning: "Make (someone) extremely angry and impatient" },
+                    { word: "Foment", meaning: "Instigate or stir up (an undesirable or violent sentiment or course of action)" },
+                    { word: "Ferment", meaning: "Incite or stir up (trouble or disorder)" },
+                    { word: "Exasperate", meaning: "Irritate intensely; infuriate" },
+                    { word: "Ignite", meaning: "Arouse or inflame (an emotion or situation)" },
+                    { word: "Exacerbate", meaning: "Make (a problem, bad situation, or negative feeling) worse" },
+                    { word: "Abet", meaning: "Encourage or support (someone) to commit wrongdoing" },
+                    { word: "Provoke", meaning: "Stimulate or give rise to (a reaction or emotion, typically a strong or unwelcome one) in someone" },
+                    { word: "Kindle", meaning: "Arouse or inspire (an emotion or feeling)" },
+                    { word: "Inflame", meaning: "Provoke or intensify (strong feelings, especially anger) in someone" },
+                    { word: "Goad", meaning: "Provoke or annoy (someone) so as to stimulate some action or reaction" },
+                    { word: "Egg On", meaning: "Urge someone to do something, especially something foolish or risky" },
+                    { word: "Ablaze", meaning: "Burning fiercely" },
+                    { word: "Embroil", meaning: "Involve (someone) deeply in an argument, conflict, or difficult situation" },
+                    { word: "Arouse", meaning: "Evoke or awaken (a feeling, emotion, or response)" }
+                ]
+            },
+            {
+                category: "Chaos",
+                words: [
+                    { word: "Turmoil", meaning: "A state of great disturbance, confusion, or uncertainty" },
+                    { word: "Chaos", meaning: "Complete disorder and confusion" },
+                    { word: "Confusion", meaning: "Uncertainty about what is happening, intended, or required" },
+                    { word: "Disorder", meaning: "A state of confusion" },
+                    { word: "Uproar", meaning: "A loud and impassioned noise or disturbance" },
+                    { word: "Agitation", meaning: "A state of anxiety or nervous excitement" },
+                    { word: "Turbulence", meaning: "Violent or unsteady movement of air or water, or of some other fluid" },
+                    { word: "Tumultuous", meaning: "Making an uproar or loud, confused noise" },
+                    { word: "Disarray", meaning: "A state of disorganization or untidiness" },
+                    { word: "Unrest", meaning: "A state of dissatisfaction, disturbance, and agitation, typically involving public demonstrations or disorder" },
+                    { word: "Upheaval", meaning: "A violent or sudden change or disruption to something" },
+                    { word: "Mayhem", meaning: "Violent or extreme disorder; chaos" },
+                    { word: "Bedlam", meaning: "A scene of uproar and confusion" },
+                    { word: "Pandemonium", meaning: "Wild and noisy disorder or confusion; uproar" },
+                    { word: "Topsy-Turvy", meaning: "Upside down" },
+                    { word: "Commotion", meaning: "A state of confused and noisy disturbance" },
+                    { word: "Hullabaloo", meaning: "A commotion; a fuss" },
+                    { word: "Ruckus", meaning: "A row or commotion" },
+                    { word: "Shambles", meaning: "A state of total disorder" }
+                ]
+            },
+            {
+                category: "Peace",
+                words: [
+                    { word: "Peace", meaning: "Freedom from disturbance; tranquility" },
+                    { word: "Harmony", meaning: "The quality of forming a pleasing and consistent whole" },
+                    { word: "Peacefulness", meaning: "The state of being quiet and tranquil" },
+                    { word: "Serenity", meaning: "The state of being calm, peaceful, and untroubled" },
+                    { word: "Tranquility", meaning: "The quality or state of being tranquil; calm" },
+                    { word: "Calmness", meaning: "The state or quality of being free from agitation or strong emotion" },
+                    { word: "Placidity", meaning: "The state of being placid; calmness" },
+                    { word: "Quietude", meaning: "A state of stillness, calmness, and quiet in a person or place" }
+                ]
+            },
+            {
+                category: "Reckless",
+                words: [
+                    { word: "Slipshod", meaning: "Characterized by a lack of care, thought, or organization" },
+                    { word: "Reckless", meaning: "Without thinking or caring about the consequences of an action" },
+                    { word: "Unwary", meaning: "Not cautious or aware of potential dangers; careless" },
+                    { word: "Careless", meaning: "Not giving sufficient attention or thought to avoiding harm or errors" },
+                    { word: "Heedless", meaning: "Showing a reckless lack of care or attention" },
+                    { word: "Neglectful", meaning: "Failing to care for something properly" },
+                    { word: "Negligent", meaning: "Failing to take proper care in doing something" },
+                    { word: "Rash", meaning: "Acting or done without careful consideration of the possible consequences; impetuous" },
+                    { word: "Remiss", meaning: "Lacking care or attention to duty; negligent" },
+                    { word: "Lax", meaning: "Not sufficiently strict, severe, or careful" },
+                    { word: "Unmindful", meaning: "Not conscious or aware" },
+                    { word: "Foolhardy", meaning: "Recklessly bold or rash" },
+                    { word: "Impetuous", meaning: "Acting or done quickly and without thought or care" }
+                ]
+            },
+            {
+                category: "Careful",
+                words: [
+                    { word: "Wary", meaning: "Feeling or showing caution about possible dangers or problems" },
+                    { word: "Careful", meaning: "Making sure of avoiding potential danger, mishap, or harm; cautious" },
+                    { word: "Meticulous", meaning: "Showing great attention to detail; very careful and precise" },
+                    { word: "Vigilant", meaning: "Keeping careful watch for possible danger or difficulties" },
+                    { word: "Considerate", meaning: "Careful not to inconvenience or harm others" },
+                    { word: "Thoughtful", meaning: "Showing consideration for the needs of other people" },
+                    { word: "Attentive", meaning: "Paying close attention to something" },
+                    { word: "Punctilious", meaning: "Showing great attention to detail or correct behavior" },
+                    { word: "Chary", meaning: "Cautiously or suspiciously reluctant to do something" },
+                    { word: "Discreet", meaning: "Careful and circumspect in one's speech or actions, especially in order to avoid causing offense or to gain an advantage" },
+                    { word: "Circumspect", meaning: "Wary and unwilling to take risks" },
+                    { word: "Cautious", meaning: "Careful to avoid potential problems or dangers" },
+                    { word: "Heedful", meaning: "Aware of and attentive to" },
+                    { word: "Observant", meaning: "Quick to notice things" }
+                ]
+            }
+        ];
+
+        // DOM elements
+        const wordElement = document.getElementById('word');
+        const meaningElement = document.getElementById('meaning');
+        const categoryElement = document.getElementById('category');
+        const progressBar = document.getElementById('progressBar');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const wordsStats = document.getElementById('wordsStats');
+        const sessionStats = document.getElementById('sessionStats');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const wordDurationInput = document.getElementById('wordDuration');
+        const meaningDurationInput = document.getElementById('meaningDuration');
+        const wordDurationValue = document.getElementById('wordDurationValue');
+        const meaningDurationValue = document.getElementById('meaningDurationValue');
+
+        // App state
+        let currentWord = null;
+        let currentIndex = -1;
+        let shownIndices = [];
+        let isPlaying = true;
+        let wordDuration = 5;
+        let meaningDuration = 2;
+        let totalWords = vocabulary.reduce((total, cat) => total + cat.words.length, 0);
+        let sessionCount = 0;
+        let timer = null;
+        let progressInterval = null;
+        let currentPhase = 'word'; // 'word' or 'meaning'
+
+        // Initialize the app
+        function init() {
+            updateStats();
+            updateDurationDisplays();
+            setupEventListeners();
+            startCycle();
+        }
+
+        // Set up event listeners
+        function setupEventListeners() {
+            playPauseBtn.addEventListener('click', togglePlayPause);
+            prevBtn.addEventListener('click', showPreviousWord);
+            nextBtn.addEventListener('click', showNextWord);
+            
+            wordDurationInput.addEventListener('input', updateWordDuration);
+            meaningDurationInput.addEventListener('input', updateMeaningDuration);
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'Space') {
+                    e.preventDefault();
+                    togglePlayPause();
+                } else if (e.key === 'ArrowLeft') {
+                    showPreviousWord();
+                } else if (e.key === 'ArrowRight') {
+                    showNextWord();
+                }
+            });
+        }
+
+        // Update duration displays
+        function updateDurationDisplays() {
+            wordDurationValue.textContent = wordDuration.toFixed(1);
+            meaningDurationValue.textContent = meaningDuration.toFixed(1);
+        }
+
+        // Update word duration setting
+        function updateWordDuration() {
+            wordDuration = parseFloat(wordDurationInput.value);
+            updateDurationDisplays();
+            if (currentPhase === 'word') {
+                resetTimer();
+            }
+        }
+
+        // Update meaning duration setting
+        function updateMeaningDuration() {
+            meaningDuration = parseFloat(meaningDurationInput.value);
+            updateDurationDisplays();
+            if (currentPhase === 'meaning') {
+                resetTimer();
+            }
+        }
+
+        // Start the word-meaning cycle
+        function startCycle() {
+            if (!isPlaying) return;
+            
+            if (currentPhase === 'word') {
+                showNewWord();
+                startTimer(wordDuration, 'meaning');
+            } else {
+                showMeaning();
+                startTimer(meaningDuration, 'word');
+            }
+        }
+
+        // Show a new word
+        function showNewWord() {
+            // Reset shown words if all have been shown
+            if (shownIndices.length >= totalWords) {
+                shownIndices = [];
+                wordElement.textContent = "Completed all words!";
+                meaningElement.textContent = "Starting from beginning...";
+                categoryElement.textContent = "Reset";
+                setTimeout(() => {
+                    showNewWord();
+                }, 2000);
+                return;
+            }
+            
+            // Find a random word that hasn't been shown yet
+            let randomCatIndex, randomWordIndex, wordObj;
+            do {
+                randomCatIndex = Math.floor(Math.random() * vocabulary.length);
+                randomWordIndex = Math.floor(Math.random() * vocabulary[randomCatIndex].words.length);
+                wordObj = vocabulary[randomCatIndex].words[randomWordIndex];
+            } while (shownIndices.includes(`${randomCatIndex}-${randomWordIndex}`));
+            
+            // Store the current index
+            currentIndex = `${randomCatIndex}-${randomWordIndex}`;
+            shownIndices.push(currentIndex);
+            sessionCount++;
+            
+            // Update display
+            currentWord = wordObj;
+            wordElement.textContent = wordObj.word;
+            meaningElement.classList.remove('show');
+            categoryElement.textContent = vocabulary[randomCatIndex].category;
+            
+            // Update stats
+            updateStats();
+            
+            // Set phase
+            currentPhase = 'word';
+        }
+
+        // Show the meaning of the current word
+        function showMeaning() {
+            meaningElement.textContent = currentWord.meaning;
+            meaningElement.classList.add('show');
+            currentPhase = 'meaning';
+        }
+
+        // Start the timer
+        function startTimer(duration, nextPhase) {
+            clearInterval(timer);
+            clearInterval(progressInterval);
+            
+            let timeLeft = duration;
+            updateTimerDisplay(timeLeft);
+            
+            // Update progress bar
+            progressBar.style.width = '0%';
+            let progress = 0;
+            const increment = 100 / (duration * 10);
+            
+            progressInterval = setInterval(() => {
+                progress += increment;
+                progressBar.style.width = `${progress}%`;
+            }, 100);
+            
+            // Update timer
+            timer = setInterval(() => {
+                timeLeft -= 0.1;
+                updateTimerDisplay(timeLeft);
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    clearInterval(progressInterval);
+                    currentPhase = nextPhase;
+                    startCycle();
+                }
+            }, 100);
+        }
+
+        // Reset the timer
+        function resetTimer() {
+            if (currentPhase === 'word') {
+                startTimer(wordDuration, 'meaning');
+            } else {
+                startTimer(meaningDuration, 'word');
+            }
+        }
+
+        // Update timer display
+        function updateTimerDisplay(time) {
+            timerDisplay.textContent = currentPhase === 'word' 
+                ? `Next meaning in: ${time.toFixed(1)}s` 
+                : `Next word in: ${time.toFixed(1)}s`;
+        }
+
+        // Show next word
+        function showNextWord() {
+            clearInterval(timer);
+            clearInterval(progressInterval);
+            currentPhase = 'word';
+            startCycle();
+        }
+
+        // Show previous word
+        function showPreviousWord() {
+            if (shownIndices.length <= 1) return;
+            
+            // Remove current index
+            shownIndices.pop();
+            
+            // Get previous index
+            const prevIndex = shownIndices[shownIndices.length - 1];
+            const [catIndex, wordIndex] = prevIndex.split('-').map(Number);
+            
+            // Update display
+            currentWord = vocabulary[catIndex].words[wordIndex];
+            wordElement.textContent = currentWord.word;
+            meaningElement.textContent = currentWord.meaning;
+            meaningElement.classList.add('show');
+            categoryElement.textContent = vocabulary[catIndex].category;
+            
+            // Update stats
+            sessionCount--;
+            updateStats();
+            
+            // Reset timer
+            currentPhase = 'meaning';
+            resetTimer();
+        }
+
+        // Toggle play/pause
+        function togglePlayPause() {
+            isPlaying = !isPlaying;
+            
+            if (isPlaying) {
+                playPauseBtn.innerHTML = '<span>⏸ Pause</span>';
+                startCycle();
+            } else {
+                playPauseBtn.innerHTML = '<span>▶ Play</span>';
+                clearInterval(timer);
+                clearInterval(progressInterval);
+                timerDisplay.textContent = 'Paused';
+                progressBar.style.width = '0%';
+            }
+        }
+
+        // Update statistics displays
+        function updateStats() {
+            wordsStats.textContent = `Words: ${shownIndices.length}/${totalWords}`;
+            sessionStats.textContent = `Session: ${sessionCount} words`;
+        }
+
+        // Initialize the app when the page loads
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
