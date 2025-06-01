@@ -222,6 +222,11 @@
             margin: 0 3px;
         }
         
+        .reset-btn {
+            margin-top: 15px;
+            background-color: var(--warning-color);
+        }
+        
         @media (max-width: 600px) {
             .container {
                 padding: 20px;
@@ -298,6 +303,8 @@
                 <input type="range" id="meaningDuration" min="1" max="10" step="0.5" value="2">
                 <div class="speed-value" id="meaningDurationValue">2.0</div>
             </div>
+            
+            <button id="resetBtn" class="reset-btn">Reset Progress</button>
         </div>
         
         <div class="shortcuts">
@@ -309,7 +316,7 @@
     </div>
 
     <script>
-        // Complete vocabulary database with all words and meanings
+        // Complete vocabulary database
         const vocabulary = [
             {
                 category: "Praise",
@@ -607,6 +614,14 @@
         const meaningDurationInput = document.getElementById('meaningDuration');
         const wordDurationValue = document.getElementById('wordDurationValue');
         const meaningDurationValue = document.getElementById('meaningDurationValue');
+        const resetBtn = document.getElementById('resetBtn');
+
+        // Storage keys
+        const STORAGE_KEYS = {
+            SHOWN_WORDS: 'vocab_shown_words',
+            SETTINGS: 'vocab_settings',
+            CURRENT_STATE: 'vocab_current_state'
+        };
 
         // App state
         let currentWord = null;
@@ -619,14 +634,100 @@
         let sessionCount = 0;
         let timer = null;
         let progressInterval = null;
-        let currentPhase = 'word'; // 'word' or 'meaning'
+        let currentPhase = 'word';
 
         // Initialize the app
         function init() {
+            initFromStorage();
             updateStats();
             updateDurationDisplays();
             setupEventListeners();
-            startCycle();
+            
+            if (!currentWord) {
+                startCycle();
+            } else if (isPlaying) {
+                resetTimer();
+            }
+        }
+
+        // Load data from storage
+        function initFromStorage() {
+            // Load settings
+            const savedSettings = loadFromStorage(STORAGE_KEYS.SETTINGS);
+            if (savedSettings) {
+                wordDuration = savedSettings.wordDuration || 5;
+                meaningDuration = savedSettings.meaningDuration || 2;
+                wordDurationInput.value = wordDuration;
+                meaningDurationInput.value = meaningDuration;
+                updateDurationDisplays();
+            }
+
+            // Load shown words
+            const savedShownWords = loadFromStorage(STORAGE_KEYS.SHOWN_WORDS);
+            if (savedShownWords) {
+                shownIndices = savedShownWords;
+                updateStats();
+            }
+
+            // Load current state
+            const savedState = loadFromStorage(STORAGE_KEYS.CURRENT_STATE);
+            if (savedState) {
+                currentIndex = savedState.currentIndex;
+                currentPhase = savedState.currentPhase;
+                if (currentIndex) {
+                    const [catIndex, wordIndex] = currentIndex.split('-').map(Number);
+                    currentWord = vocabulary[catIndex].words[wordIndex];
+                    wordElement.textContent = currentWord.word;
+                    categoryElement.textContent = vocabulary[catIndex].category;
+                    
+                    if (currentPhase === 'meaning') {
+                        meaningElement.textContent = currentWord.meaning;
+                        meaningElement.classList.add('show');
+                    }
+                }
+            }
+        }
+
+        // Storage functions
+        function saveToStorage(key, data) {
+            localStorage.setItem(key, JSON.stringify(data));
+        }
+
+        function loadFromStorage(key) {
+            const data = localStorage.getItem(key);
+            return data ? JSON.parse(data) : null;
+        }
+
+        function saveSettings() {
+            saveToStorage(STORAGE_KEYS.SETTINGS, {
+                wordDuration,
+                meaningDuration
+            });
+        }
+
+        function saveShownWords() {
+            saveToStorage(STORAGE_KEYS.SHOWN_WORDS, shownIndices);
+        }
+
+        function saveCurrentState() {
+            saveToStorage(STORAGE_KEYS.CURRENT_STATE, {
+                currentIndex,
+                currentPhase
+            });
+        }
+
+        // Reset progress
+        function resetProgress() {
+            if (confirm("Are you sure you want to reset all progress? This cannot be undone.")) {
+                localStorage.removeItem(STORAGE_KEYS.SHOWN_WORDS);
+                localStorage.removeItem(STORAGE_KEYS.CURRENT_STATE);
+                shownIndices = [];
+                currentIndex = -1;
+                currentWord = null;
+                sessionCount = 0;
+                updateStats();
+                startCycle();
+            }
         }
 
         // Set up event listeners
@@ -634,9 +735,21 @@
             playPauseBtn.addEventListener('click', togglePlayPause);
             prevBtn.addEventListener('click', showPreviousWord);
             nextBtn.addEventListener('click', showNextWord);
+            resetBtn.addEventListener('click', resetProgress);
             
-            wordDurationInput.addEventListener('input', updateWordDuration);
-            meaningDurationInput.addEventListener('input', updateMeaningDuration);
+            wordDurationInput.addEventListener('input', () => {
+                wordDuration = parseFloat(wordDurationInput.value);
+                updateDurationDisplays();
+                saveSettings();
+                if (currentPhase === 'word') resetTimer();
+            });
+            
+            meaningDurationInput.addEventListener('input', () => {
+                meaningDuration = parseFloat(meaningDurationInput.value);
+                updateDurationDisplays();
+                saveSettings();
+                if (currentPhase === 'meaning') resetTimer();
+            });
             
             // Keyboard shortcuts
             document.addEventListener('keydown', (e) => {
@@ -649,30 +762,15 @@
                     showNextWord();
                 }
             });
+            
+            // Save state before unload
+            window.addEventListener('beforeunload', saveCurrentState);
         }
 
         // Update duration displays
         function updateDurationDisplays() {
             wordDurationValue.textContent = wordDuration.toFixed(1);
             meaningDurationValue.textContent = meaningDuration.toFixed(1);
-        }
-
-        // Update word duration setting
-        function updateWordDuration() {
-            wordDuration = parseFloat(wordDurationInput.value);
-            updateDurationDisplays();
-            if (currentPhase === 'word') {
-                resetTimer();
-            }
-        }
-
-        // Update meaning duration setting
-        function updateMeaningDuration() {
-            meaningDuration = parseFloat(meaningDurationInput.value);
-            updateDurationDisplays();
-            if (currentPhase === 'meaning') {
-                resetTimer();
-            }
         }
 
         // Start the word-meaning cycle
@@ -693,6 +791,7 @@
             // Reset shown words if all have been shown
             if (shownIndices.length >= totalWords) {
                 shownIndices = [];
+                saveShownWords();
                 wordElement.textContent = "Completed all words!";
                 meaningElement.textContent = "Starting from beginning...";
                 categoryElement.textContent = "Reset";
@@ -723,6 +822,7 @@
             
             // Update stats
             updateStats();
+            saveShownWords();
             
             // Set phase
             currentPhase = 'word';
@@ -812,6 +912,7 @@
             // Update stats
             sessionCount--;
             updateStats();
+            saveShownWords();
             
             // Reset timer
             currentPhase = 'meaning';
